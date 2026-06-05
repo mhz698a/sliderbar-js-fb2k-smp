@@ -100,6 +100,10 @@ function desenumFolderDialog() {
   }
 }
 
+function actionExploreDirectory() {
+    fb.RunContextCommand("Run service/Explore Directory");
+}
+
 function showFileActions(x, y) {
   try {
     const menu = window.CreatePopupMenu();
@@ -114,6 +118,7 @@ function showFileActions(x, y) {
       7: { text: "Copy Names", action: copySelectedFileNames },
       8: { text: "Copy Paths", action: copySelectedFilePaths },
       9: { text: "Mp3Tag This Folder", action: openmp3Tag },
+      10: { text: "Explore folder of current song", action: actionExploreDirectory },
     };
 
     Object.entries(actions).forEach(([id, { text }]) =>

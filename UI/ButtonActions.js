@@ -16,10 +16,6 @@ function actionEffectsMenu(x, y) {
     showEffectsMenu(x, y);
 }
 
-function actionExploreDirectory() {
-    fb.RunContextCommand("Run service/Explore Directory");
-}
-
 function actionGoogleArtistTitle(x, y) {
     showGoogleSearcherSongsMenu(x, y);
 }
