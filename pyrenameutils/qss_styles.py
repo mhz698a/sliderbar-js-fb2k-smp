@@ -4,10 +4,20 @@ QWidget {
     color: #dddddd;
     font-size: 11pt;
 }
-QLineEdit {
+QLineEdit, QComboBox {
     background-color: #2b2b2b;
     border: 1px solid #3c3c3c;
     padding: 6px;
+}
+QComboBox QAbstractItemView {
+    background-color: #2b2b2b;
+    border: 1px solid #3c3c3c;
+    color: #ffffff;
+}
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 30px; /* Incrementa este valor para un botón más ancho */
 }
 QPushButton {
     background-color: #333333;

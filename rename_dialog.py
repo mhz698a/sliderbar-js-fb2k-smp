@@ -67,6 +67,7 @@ class RenameDialog(QtWidgets.QWidget):
         self.dir_path = os.path.dirname(self.file_path)
         self.base_name = os.path.basename(self.file_path)
         self.name, self.ext = os.path.splitext(self.base_name)
+        self.is_mp4 = self.ext.lower() in ('.mp4', '.m4a', '.m4v')
         self.init_ui()
 
     def init_ui(self):
@@ -75,7 +76,7 @@ class RenameDialog(QtWidgets.QWidget):
         flags &= ~Qt.WindowMaximizeButtonHint
         self.setWindowFlags(flags)
 
-        self.setFixedSize(700, 830)
+        self.setFixedSize(700, 920)
         try:
             pywinstyles.change_header_color(self, color="#232629")
         except Exception:
@@ -124,72 +125,100 @@ class RenameDialog(QtWidgets.QWidget):
         meta_layout = QtWidgets.QFormLayout()
         meta_layout.setSpacing(6)
         meta_layout.setVerticalSpacing(8)
+
         self.title_edit = QtWidgets.QLineEdit()
         self.artist_edit = QtWidgets.QLineEdit()
-        self.genre_edit = QtWidgets.QLineEdit()
+        self.album_edit = QtWidgets.QLineEdit()
+        self.year_edit = QtWidgets.QLineEdit()
+        self.date_edit = QtWidgets.QLineEdit()
+        self.track_edit = QtWidgets.QLineEdit()
+        self.disc_edit = QtWidgets.QLineEdit()
         self.comment_edit = QtWidgets.QTextEdit()
         self.comment_edit.setFixedHeight(160)
         
+        self.genre_choices = ["", "Episode", "Movie", "Short", "Soundtrack"]
+
+        self.genre_line = QtWidgets.QLineEdit()
+        self.genre_combo = QtWidgets.QComboBox()
+        self.genre_combo.addItems(self.genre_choices)
+        self.genre_combo.setEditable(False)
+
+        self.genre_stack = QtWidgets.QStackedWidget()
+        self.genre_stack.addWidget(self.genre_line)   # index 0
+        self.genre_stack.addWidget(self.genre_combo)  # index 1
+
+        self.genre_line.setFixedHeight(38)
+        self.genre_combo.setFixedHeight(38)
+
         self.title_id_btn = QtWidgets.QPushButton("(ID:)")
         self.title_id_btn.setFixedWidth(90)
         self.title_id_btn.setFixedHeight(38)
         self.title_id_btn.setFocusPolicy(Qt.NoFocus)
         self.title_id_btn.setToolTip("Añadir (ID:) al final del título")
-        
+
         self.title_paste_btn = QtWidgets.QPushButton("[ T ]")
         self.title_paste_btn.setFixedWidth(90)
         self.title_paste_btn.setFixedHeight(38)
         self.title_paste_btn.setFocusPolicy(Qt.NoFocus)
         self.title_paste_btn.setToolTip("Mover el título al campo de título")
-        
+
         title_layout = QtWidgets.QHBoxLayout()
         title_layout.setSpacing(4)
         title_layout.addWidget(self.title_edit)
         title_layout.addWidget(self.title_id_btn)
         title_layout.addWidget(self.title_paste_btn)
-        
+
         self.artist_paste_btn = QtWidgets.QPushButton("[ A ]")
         self.artist_paste_btn.setFixedWidth(90)
         self.artist_paste_btn.setFixedHeight(38)
         self.artist_paste_btn.setFocusPolicy(Qt.NoFocus)
         self.artist_paste_btn.setToolTip("Mover el artista al campo de artistas")
         
-        artist_layout = QtWidgets.QHBoxLayout()
-        artist_layout.setSpacing(4)
-        artist_layout.addWidget(self.artist_edit)
-        artist_layout.addWidget(self.artist_paste_btn)
-        
-        self.album_edit = QtWidgets.QLineEdit()
-        self.date_edit = QtWidgets.QLineEdit()
-        self.track_edit = QtWidgets.QLineEdit()
-        
         self.cover_label = CoverLabel()
         self.cover_label.clicked.connect(self.replace_cover_from_dialog)
         self.cover_label.rightClicked.connect(self.show_cover_context_menu)
 
+        artist_layout = QtWidgets.QHBoxLayout()
+        artist_layout.setSpacing(4)
+        artist_layout.addWidget(self.artist_edit)
+        artist_layout.addWidget(self.artist_paste_btn)
+
         self.album_edit.setFixedHeight(38)
+        self.year_edit.setFixedHeight(38)
         self.date_edit.setFixedHeight(38)
         self.track_edit.setFixedHeight(38)
-
-        self.date_edit.setPlaceholderText("YYYY")
-        self.track_edit.setPlaceholderText("00 o 00/00")
-        
-        
+        self.disc_edit.setFixedHeight(38)
+        self.genre_line.setFixedHeight(38)
+        self.genre_combo.setFixedHeight(38)
         self.title_edit.setFixedHeight(38)
         self.artist_edit.setFixedHeight(38)
+
+        self.year_edit.setPlaceholderText("YYYY")
+        self.date_edit.setPlaceholderText("YYYY-MM-DD o YYYY-MM-DDTHH:MM:SSZ")
+        self.track_edit.setPlaceholderText("00 o 00/00")
+        self.disc_edit.setPlaceholderText("00/00, 000/000 o 00/000")
+
+        self.year_label = QtWidgets.QLabel("Year:")
+        self.date_label = QtWidgets.QLabel("Date:")
+        self.disc_label = QtWidgets.QLabel("Disc:")
+
+        self.year_label.setEnabled(not self.is_mp4)
+        self.year_edit.setEnabled(not self.is_mp4)
+
         meta_layout.addRow(QtWidgets.QLabel("Title:"), title_layout)
         meta_layout.addRow(QtWidgets.QLabel("Artist:"), artist_layout)
         meta_layout.addRow(QtWidgets.QLabel("Album:"), self.album_edit)
-        meta_layout.addRow(QtWidgets.QLabel("Year:"), self.date_edit)
+        meta_layout.addRow(self.year_label, self.year_edit)
+        meta_layout.addRow(self.date_label, self.date_edit)
         meta_layout.addRow(QtWidgets.QLabel("Track:"), self.track_edit)
-        meta_layout.addRow(QtWidgets.QLabel("Genre:"), self.genre_edit)
+        meta_layout.addRow(self.disc_label, self.disc_edit)
+        meta_layout.addRow(QtWidgets.QLabel("Genre:"), self.genre_stack)
 
         cover_widget = QtWidgets.QWidget()
         cover_layout = QtWidgets.QHBoxLayout(cover_widget)
         cover_layout.setContentsMargins(0, 0, 0, 0)
         cover_layout.addWidget(self.cover_label)
         cover_layout.addStretch()
-
         meta_layout.addRow(QtWidgets.QLabel("Cover:"), cover_widget)
         meta_layout.addRow(QtWidgets.QLabel("Comment:"), self.comment_edit)
         
@@ -197,14 +226,20 @@ class RenameDialog(QtWidgets.QWidget):
         # Footer: checkbox + single Rename button + Close
         footer_layout = QtWidgets.QHBoxLayout()
         footer_layout.setSpacing(8)
+        
         self.always_on_top_checkbox = QtWidgets.QCheckBox("Siempre visible")
         self.always_on_top_checkbox.setChecked(True)
         self.always_on_top_checkbox.stateChanged.connect(self.on_always_on_top_changed)
         self.setWindowFlag(Qt.WindowStaysOnTopHint, True)
+        
+        self.overwrite_checkbox = QtWidgets.QCheckBox("Es Sobrescritor")
+        self.overwrite_checkbox.setChecked(False)
+        self.overwrite_checkbox.stateChanged.connect(self.sync_genre_mode)
 
         footer_buttons_layout = QtWidgets.QHBoxLayout()
         footer_buttons_layout.setSpacing(6)
-        btn_rename = QtWidgets.QPushButton("Rename")  # único botón que aplica etiquetas y renombra
+        
+        btn_rename = QtWidgets.QPushButton("Rename") # único botón que aplica etiquetas y renombra
         btn_close = QtWidgets.QPushButton("Close")
         btn_rename.setFixedWidth(140)
         btn_close.setFixedWidth(100)
@@ -212,6 +247,7 @@ class RenameDialog(QtWidgets.QWidget):
         footer_buttons_layout.addWidget(btn_close)
 
         footer_layout.addWidget(self.always_on_top_checkbox)
+        footer_layout.addWidget(self.overwrite_checkbox)
         footer_layout.addStretch()
         footer_layout.addLayout(footer_buttons_layout)
 
@@ -248,9 +284,13 @@ class RenameDialog(QtWidgets.QWidget):
             self.title_edit.setText(tags.get('title', '') or '')
             self.artist_edit.setText(tags.get('artist', '') or '')
             self.album_edit.setText(tags.get('album', '') or '')
+            self.year_edit.setText(tags.get('year', '') or '')
             self.date_edit.setText(tags.get('date', '') or '')
             self.track_edit.setText(tags.get('track', '') or '')
-            self.genre_edit.setText(tags.get('genre', '') or '')
+            self.disc_edit.setText(tags.get('disc', '') or '')
+            genre_value = tags.get('genre', '') or ''
+            self.set_genre_value(genre_value)
+            self.sync_genre_mode()
             self.comment_edit.setText(tags.get('comment', '') or '')
             self.load_cover_art()
         except Exception:
@@ -264,6 +304,68 @@ class RenameDialog(QtWidgets.QWidget):
 
     def apply_dark_theme(self):
         self.setStyleSheet(QSS)
+
+    # New functions in 2026-06-08
+    def get_genre_value(self):
+        if self.overwrite_checkbox.isChecked():
+            return self.genre_combo.currentText().strip()
+        return self.genre_line.text().strip()
+
+    def set_genre_value(self, value: str):
+        value = (value or "").strip()
+
+        if value in self.genre_choices:
+            self.genre_combo.setCurrentText(value)
+        else:
+            self.genre_combo.setCurrentIndex(0)
+
+        self.genre_line.setText(value)
+
+    def sync_genre_mode(self, *_):
+        strict = self.overwrite_checkbox.isChecked()
+        current = self.get_genre_value()
+
+        if strict:
+            self.genre_stack.setCurrentWidget(self.genre_combo)
+            self.genre_combo.setCurrentText(
+                current if current in self.genre_choices else ""
+            )
+        else:
+            self.genre_stack.setCurrentWidget(self.genre_line)
+            self.genre_line.setText(current)
+
+    def validate_metadata_fields(self):
+        year = self.year_edit.text().strip()
+        date = self.date_edit.text().strip()
+        disc = self.disc_edit.text().strip()
+
+        if not date:
+            QtWidgets.QMessageBox.warning(self, "Fecha inválida", "La fecha es obligatoria.")
+            return None
+
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}Z)?", date):
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Fecha inválida",
+                "Usa YYYY-MM-DD o YYYY-MM-DDTHH:MM:SSZ."
+            )
+            return None
+
+        if self.is_mp4:
+            year = ""
+        elif year and not re.fullmatch(r"\d{4}", year):
+            QtWidgets.QMessageBox.warning(self, "Year inválido", "Usa YYYY.")
+            return None
+
+        if disc and not re.fullmatch(r"\d{2,3}/\d{2,3}", disc):
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Disc inválido",
+                "Formatos válidos: 00/00, 000/000 o 00/000."
+            )
+            return None
+
+        return year, date, disc
 
     # Transformations
     def replace_underscores(self):
@@ -349,9 +451,7 @@ class RenameDialog(QtWidgets.QWidget):
         self.artist_edit.setText(nuevo)        
 
     def move_title_filename_to_title(self):
-        title_selection = self.edit.selectedText()
-        # self.edit.del_()
-        
+        title_selection = self.edit.selectedText()        
         actual = self.title_edit.text() 
         
         if actual:
@@ -448,15 +548,25 @@ class RenameDialog(QtWidgets.QWidget):
         title = self.title_edit.text().strip()
         artist = self.artist_edit.text().strip()
         album = self.album_edit.text().strip()
+        year = self.year_edit.text().strip()
         date = self.date_edit.text().strip()
         track = self.track_edit.text().strip()
-        genre = self.genre_edit.text().strip()
+        disc = self.disc_edit.text().strip()
+        genre = self.get_genre_value()
         comment = self.comment_edit.toPlainText().strip()
         
         # Normalizar saltos de línea (importante para MP3 / MP4)
         comment = comment.replace('\r\n', '\n')        
+        
+        validated = self.validate_metadata_fields()
+        if validated is None:
+            return
 
-        if track and not re.match(r'^\d{1,3}(/\d{2,3})?$', track):
+        year, date, disc = validated
+        if self.overwrite_checkbox.isChecked() and genre not in self.genre_choices:
+            genre = ""
+
+        if track and not re.fullmatch(r'^\d{1,3}(/\d{2,3})?$', track):
             QtWidgets.QMessageBox.warning(
                 self,
                 "Track inválido",
@@ -496,8 +606,10 @@ class RenameDialog(QtWidgets.QWidget):
                             artist if artist else '',
                             comment if comment else '',
                             album if album else '',
+                            year if year else '',
                             date if date else '',
                             track if track else '',
+                            disc if disc else '',
                             genre if genre else ''
                         )
                     except Exception as e:
